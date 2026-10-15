@@ -1,0 +1,850 @@
+{
+  "about": "Problem 4 smoke test. Claude Code (the vibe coder) answered one plain-English question per ticket by calling the campus-customs MCP server through .mcp.json. Each entry has the prompt, the tool Claude Code chose, the tool output, and a check of every output value against data/campus_customs_new.db.",
+  "how_tested": [
+    "Claude Code 2.1.246 ran each prompt headless, loading the project's .mcp.json with --mcp-config. Exact command: CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 claude -p --input-format stream-json --replay-user-messages --output-format stream-json --verbose --mcp-config .mcp.json --strict-mcp-config --tools '' --allowedTools mcp__campus-customs__check_stock_and_price mcp__campus-customs__check_invoice mcp__campus-customs__check_lease --no-session-persistence --max-turns 4 --model sonnet < prompt-as-stream-json-user-message",
+    "Built-in tools were off (--tools \"\"), so the three campus-customs tools were the only tools; the prompts ask business questions and do not name a tool, so Claude Code picked the tool and its arguments.",
+    "Each prompt was sent on stdin and replayed into the transcript, so the recorded prompt is the one the run received. Auto-memory was off so the run only answered its prompt.",
+    "tool_output is the tool result exactly as Claude Code passed it to the model (whole numbers such as 840.0 show as 840).",
+    "db_check recomputes every value in tool_output with SQL run read-only on data/campus_customs_new.db (the queries and rows are included), separately from mcp_server/server.py, and checks that the arguments came from the ticket row.",
+    "An earlier batch, with prompts that nearly named the tools and with memory on, returned the same tool outputs; it was replaced by this batch."
+  ],
+  "mcp_connection": {
+    "file": ".mcp.json",
+    "config": {
+      "mcpServers": {
+        "campus-customs": {
+          "type": "stdio",
+          "command": "/Users/matthewagurcia/Documents/MBA/Fa26/MGT-409_AI/hw 5/.venv/bin/python",
+          "args": [
+            "/Users/matthewagurcia/Documents/MBA/Fa26/MGT-409_AI/hw 5/mcp_server/server.py"
+          ],
+          "env": {}
+        }
+      }
+    }
+  },
+  "database": {
+    "file": "data/campus_customs_new.db",
+    "sha256": "23686a90d698f7fa6f901a3f0a9774db9cbb31e13151c9e5717275f3321f360a",
+    "same_as_original": true,
+    "date_today": "2026-08-31"
+  },
+  "summary": {
+    "tools_tested": [
+      "check_stock_and_price",
+      "check_invoice",
+      "check_lease"
+    ],
+    "fields_checked": 53,
+    "all_outputs_match_database": true,
+    "all_arguments_match_tickets": true
+  },
+  "tests": [
+    {
+      "ticket": 103,
+      "prompt": "Ticket 103 from the Campus Customs board: the Yale AI Club wants 20 Basic Hoodie Big Yale (SKU CC-HOOD-NAVY) in size M and is asking for a bulk discount. Before we answer them: how many size M hoodies do we have, how many are we short, and what do we pay per hoodie versus what we sell it for? Use the shop's data, not guesses.",
+      "tool": "check_stock_and_price",
+      "mcp_tool_name": "mcp__campus-customs__check_stock_and_price",
+      "arguments": {
+        "sku": "CC-HOOD-NAVY",
+        "size": "M",
+        "qty_needed": 20
+      },
+      "tool_output": {
+        "sku": "CC-HOOD-NAVY",
+        "name": "Basic Hoodie Big Yale",
+        "sizes": [
+          {
+            "size": "S",
+            "qty": 4,
+            "location": "Aisle A"
+          },
+          {
+            "size": "M",
+            "qty": 8,
+            "location": "Aisle A"
+          },
+          {
+            "size": "L",
+            "qty": 14,
+            "location": "Aisle A"
+          },
+          {
+            "size": "XL",
+            "qty": 6,
+            "location": "Aisle A"
+          }
+        ],
+        "total_qty": 32,
+        "requested": {
+          "size": "M",
+          "qty_on_hand": 8,
+          "in_stock": true,
+          "qty_needed": 20,
+          "shortfall": 12,
+          "can_fill_from_stock": false
+        },
+        "pricing": {
+          "unit_cost": 22,
+          "list_price": 58,
+          "margin_per_unit_at_list": 36,
+          "margin_pct_at_list": 62.1
+        }
+      },
+      "tool_error": false,
+      "assistant_answer": "On hand (size M): **8 hoodies**, so you're **short 12** of the 20 requested.\n\nPricing per unit:\n- **Cost:** $22\n- **List price:** $58\n- **Margin:** $36/unit (62.1%)\n\nThat $36 margin gives you room to negotiate a bulk discount for the AI Club while still staying profitable \u2014 just note you'd need to restock 12 units to fulfill the full order.",
+      "run": {
+        "session_id": "97c1da8b-1c1e-4546-a7bd-62b8aec69e04",
+        "model": "claude-sonnet-5",
+        "mcp_servers": [
+          {
+            "name": "campus-customs",
+            "status": "connected"
+          }
+        ],
+        "tools_available": [
+          "mcp__campus-customs__check_invoice",
+          "mcp__campus-customs__check_lease",
+          "mcp__campus-customs__check_stock_and_price"
+        ],
+        "turns": 2
+      },
+      "db_check": {
+        "fields_checked": 25,
+        "all_fields_match": true,
+        "arguments_match_ticket": true,
+        "fields": [
+          {
+            "field": "name",
+            "tool_value": "Basic Hoodie Big Yale",
+            "db_value": "Basic Hoodie Big Yale",
+            "match": true
+          },
+          {
+            "field": "pricing.list_price",
+            "tool_value": 58,
+            "db_value": 58.0,
+            "match": true
+          },
+          {
+            "field": "pricing.margin_pct_at_list",
+            "tool_value": 62.1,
+            "db_value": 62.1,
+            "match": true
+          },
+          {
+            "field": "pricing.margin_per_unit_at_list",
+            "tool_value": 36,
+            "db_value": 36.0,
+            "match": true
+          },
+          {
+            "field": "pricing.unit_cost",
+            "tool_value": 22,
+            "db_value": 22.0,
+            "match": true
+          },
+          {
+            "field": "requested.can_fill_from_stock",
+            "tool_value": false,
+            "db_value": false,
+            "match": true
+          },
+          {
+            "field": "requested.in_stock",
+            "tool_value": true,
+            "db_value": true,
+            "match": true
+          },
+          {
+            "field": "requested.qty_needed",
+            "tool_value": 20,
+            "db_value": 20,
+            "match": true
+          },
+          {
+            "field": "requested.qty_on_hand",
+            "tool_value": 8,
+            "db_value": 8,
+            "match": true
+          },
+          {
+            "field": "requested.shortfall",
+            "tool_value": 12,
+            "db_value": 12,
+            "match": true
+          },
+          {
+            "field": "requested.size",
+            "tool_value": "M",
+            "db_value": "M",
+            "match": true
+          },
+          {
+            "field": "sizes[0].location",
+            "tool_value": "Aisle A",
+            "db_value": "Aisle A",
+            "match": true
+          },
+          {
+            "field": "sizes[0].qty",
+            "tool_value": 4,
+            "db_value": 4,
+            "match": true
+          },
+          {
+            "field": "sizes[0].size",
+            "tool_value": "S",
+            "db_value": "S",
+            "match": true
+          },
+          {
+            "field": "sizes[1].location",
+            "tool_value": "Aisle A",
+            "db_value": "Aisle A",
+            "match": true
+          },
+          {
+            "field": "sizes[1].qty",
+            "tool_value": 8,
+            "db_value": 8,
+            "match": true
+          },
+          {
+            "field": "sizes[1].size",
+            "tool_value": "M",
+            "db_value": "M",
+            "match": true
+          },
+          {
+            "field": "sizes[2].location",
+            "tool_value": "Aisle A",
+            "db_value": "Aisle A",
+            "match": true
+          },
+          {
+            "field": "sizes[2].qty",
+            "tool_value": 14,
+            "db_value": 14,
+            "match": true
+          },
+          {
+            "field": "sizes[2].size",
+            "tool_value": "L",
+            "db_value": "L",
+            "match": true
+          },
+          {
+            "field": "sizes[3].location",
+            "tool_value": "Aisle A",
+            "db_value": "Aisle A",
+            "match": true
+          },
+          {
+            "field": "sizes[3].qty",
+            "tool_value": 6,
+            "db_value": 6,
+            "match": true
+          },
+          {
+            "field": "sizes[3].size",
+            "tool_value": "XL",
+            "db_value": "XL",
+            "match": true
+          },
+          {
+            "field": "sku",
+            "tool_value": "CC-HOOD-NAVY",
+            "db_value": "CC-HOOD-NAVY",
+            "match": true
+          },
+          {
+            "field": "total_qty",
+            "tool_value": 32,
+            "db_value": 32,
+            "match": true
+          }
+        ],
+        "ticket_link": [
+          {
+            "argument": "sku",
+            "argument_value": "CC-HOOD-NAVY",
+            "ticket_column": "sku",
+            "ticket_value": "CC-HOOD-NAVY",
+            "match": true
+          },
+          {
+            "argument": "size",
+            "argument_value": "M",
+            "ticket_column": "size",
+            "ticket_value": "M",
+            "match": true
+          },
+          {
+            "argument": "qty_needed",
+            "argument_value": 20,
+            "ticket_column": "qty",
+            "ticket_value": 20,
+            "match": true
+          }
+        ],
+        "sql": [
+          {
+            "name": "product",
+            "query": "SELECT DISTINCT sku, name FROM inventory WHERE sku = ?",
+            "params": [
+              "CC-HOOD-NAVY"
+            ],
+            "rows": [
+              {
+                "sku": "CC-HOOD-NAVY",
+                "name": "Basic Hoodie Big Yale"
+              }
+            ]
+          },
+          {
+            "name": "sizes",
+            "query": "SELECT size, qty, location FROM inventory WHERE sku = ? ORDER BY CASE size WHEN 'XS' THEN 0 WHEN 'S' THEN 1 WHEN 'M' THEN 2 WHEN 'L' THEN 3 WHEN 'XL' THEN 4 WHEN 'XXL' THEN 5 ELSE 9 END",
+            "params": [
+              "CC-HOOD-NAVY"
+            ],
+            "rows": [
+              {
+                "size": "S",
+                "qty": 4,
+                "location": "Aisle A"
+              },
+              {
+                "size": "M",
+                "qty": 8,
+                "location": "Aisle A"
+              },
+              {
+                "size": "L",
+                "qty": 14,
+                "location": "Aisle A"
+              },
+              {
+                "size": "XL",
+                "qty": 6,
+                "location": "Aisle A"
+              }
+            ]
+          },
+          {
+            "name": "total_qty",
+            "query": "SELECT SUM(qty) AS total_qty FROM inventory WHERE sku = ?",
+            "params": [
+              "CC-HOOD-NAVY"
+            ],
+            "rows": [
+              {
+                "total_qty": 32
+              }
+            ]
+          },
+          {
+            "name": "pricing",
+            "query": "SELECT unit_cost, list_price, ROUND(list_price - unit_cost, 2) AS margin_per_unit_at_list, ROUND((list_price - unit_cost) * 100.0 / list_price, 1) AS margin_pct_at_list FROM pricing WHERE sku = ?",
+            "params": [
+              "CC-HOOD-NAVY"
+            ],
+            "rows": [
+              {
+                "unit_cost": 22.0,
+                "list_price": 58.0,
+                "margin_per_unit_at_list": 36.0,
+                "margin_pct_at_list": 62.1
+              }
+            ]
+          },
+          {
+            "name": "requested_size",
+            "query": "SELECT size, qty AS qty_on_hand, qty > 0 AS in_stock, ? AS qty_needed, MAX(0, ? - qty) AS shortfall, qty >= ? AS can_fill_from_stock FROM inventory WHERE sku = ? AND size = ?",
+            "params": [
+              20,
+              20,
+              20,
+              "CC-HOOD-NAVY",
+              "M"
+            ],
+            "rows": [
+              {
+                "size": "M",
+                "qty_on_hand": 8,
+                "in_stock": true,
+                "qty_needed": 20,
+                "shortfall": 12,
+                "can_fill_from_stock": false
+              }
+            ]
+          },
+          {
+            "name": "ticket",
+            "query": "SELECT * FROM tickets WHERE id = ?",
+            "params": [
+              103
+            ],
+            "rows": [
+              {
+                "id": 103,
+                "type": "price_override",
+                "requester": "Yale AI Club",
+                "subject": "Bulk hoodie discount",
+                "sku": "CC-HOOD-NAVY",
+                "size": "M",
+                "qty": 20,
+                "lease_id": null,
+                "invoice_id": null,
+                "status": "open",
+                "notes": "Student org wants 20 hoodies, size M, asking for a bulk discount.",
+                "created_at": "2026-08-31T16:55:00-04:00"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "ticket": 101,
+      "prompt": "Ticket 101 from the Campus Customs board: Tauhid Zaman wants one Classic Bulldog Tee in size S, and the ticket is tied to invoice 501 from our print vendor. Is that bill late as of the shop's date, and can we expect that vendor to ship us more product right now? Use the shop's data, not guesses.",
+      "tool": "check_invoice",
+      "mcp_tool_name": "mcp__campus-customs__check_invoice",
+      "arguments": {
+        "invoice_id": 501
+      },
+      "tool_output": {
+        "invoice_id": 501,
+        "vendor_id": 1,
+        "amount": 840,
+        "due_date": "2026-08-28",
+        "status": "open",
+        "description": "Rush reprint CC-TEE-WHITE S",
+        "date_today": "2026-08-31",
+        "is_overdue": true,
+        "days_overdue": 3,
+        "vendor": {
+          "id": 1,
+          "name": "Bulldog Print Co",
+          "specialty": "apparel reprint",
+          "lead_days": 5
+        },
+        "vendor_unpaid_invoices": [
+          {
+            "invoice_id": 501,
+            "amount": 840,
+            "due_date": "2026-08-28",
+            "status": "open"
+          }
+        ],
+        "vendor_unpaid_total": 840,
+        "vendor_blocked": true
+      },
+      "tool_error": false,
+      "assistant_answer": "Yes \u2014 invoice 501 ($840, from Bulldog Print Co) is **overdue by 3 days** (due 2026-08-28, shop date 2026-08-31).\n\nAnd no, you can't expect a shipment right now: this unpaid invoice is Bulldog Print Co's only open balance, but per the shop rule, any unpaid invoice blocks shipping \u2014 so the vendor is currently **blocked** from shipping new product until it's paid.",
+      "run": {
+        "session_id": "9b18b21b-c050-4e04-ad23-b38c3160b951",
+        "model": "claude-sonnet-5",
+        "mcp_servers": [
+          {
+            "name": "campus-customs",
+            "status": "connected"
+          }
+        ],
+        "tools_available": [
+          "mcp__campus-customs__check_invoice",
+          "mcp__campus-customs__check_lease",
+          "mcp__campus-customs__check_stock_and_price"
+        ],
+        "turns": 2
+      },
+      "db_check": {
+        "fields_checked": 19,
+        "all_fields_match": true,
+        "arguments_match_ticket": true,
+        "fields": [
+          {
+            "field": "amount",
+            "tool_value": 840,
+            "db_value": 840.0,
+            "match": true
+          },
+          {
+            "field": "date_today",
+            "tool_value": "2026-08-31",
+            "db_value": "2026-08-31",
+            "match": true
+          },
+          {
+            "field": "days_overdue",
+            "tool_value": 3,
+            "db_value": 3,
+            "match": true
+          },
+          {
+            "field": "description",
+            "tool_value": "Rush reprint CC-TEE-WHITE S",
+            "db_value": "Rush reprint CC-TEE-WHITE S",
+            "match": true
+          },
+          {
+            "field": "due_date",
+            "tool_value": "2026-08-28",
+            "db_value": "2026-08-28",
+            "match": true
+          },
+          {
+            "field": "invoice_id",
+            "tool_value": 501,
+            "db_value": 501,
+            "match": true
+          },
+          {
+            "field": "is_overdue",
+            "tool_value": true,
+            "db_value": true,
+            "match": true
+          },
+          {
+            "field": "status",
+            "tool_value": "open",
+            "db_value": "open",
+            "match": true
+          },
+          {
+            "field": "vendor.id",
+            "tool_value": 1,
+            "db_value": 1,
+            "match": true
+          },
+          {
+            "field": "vendor.lead_days",
+            "tool_value": 5,
+            "db_value": 5,
+            "match": true
+          },
+          {
+            "field": "vendor.name",
+            "tool_value": "Bulldog Print Co",
+            "db_value": "Bulldog Print Co",
+            "match": true
+          },
+          {
+            "field": "vendor.specialty",
+            "tool_value": "apparel reprint",
+            "db_value": "apparel reprint",
+            "match": true
+          },
+          {
+            "field": "vendor_blocked",
+            "tool_value": true,
+            "db_value": true,
+            "match": true
+          },
+          {
+            "field": "vendor_id",
+            "tool_value": 1,
+            "db_value": 1,
+            "match": true
+          },
+          {
+            "field": "vendor_unpaid_invoices[0].amount",
+            "tool_value": 840,
+            "db_value": 840.0,
+            "match": true
+          },
+          {
+            "field": "vendor_unpaid_invoices[0].due_date",
+            "tool_value": "2026-08-28",
+            "db_value": "2026-08-28",
+            "match": true
+          },
+          {
+            "field": "vendor_unpaid_invoices[0].invoice_id",
+            "tool_value": 501,
+            "db_value": 501,
+            "match": true
+          },
+          {
+            "field": "vendor_unpaid_invoices[0].status",
+            "tool_value": "open",
+            "db_value": "open",
+            "match": true
+          },
+          {
+            "field": "vendor_unpaid_total",
+            "tool_value": 840,
+            "db_value": 840.0,
+            "match": true
+          }
+        ],
+        "ticket_link": [
+          {
+            "argument": "invoice_id",
+            "argument_value": 501,
+            "ticket_column": "invoice_id",
+            "ticket_value": 501,
+            "match": true
+          }
+        ],
+        "sql": [
+          {
+            "name": "invoice",
+            "query": "SELECT i.id AS invoice_id, i.vendor_id, i.amount, i.due_date, i.status, i.description, d.date_today, (lower(trim(i.status)) <> 'paid' AND d.date_today > i.due_date) AS is_overdue, CASE WHEN lower(trim(i.status)) <> 'paid' AND d.date_today > i.due_date THEN CAST(julianday(d.date_today) - julianday(i.due_date) AS INTEGER) ELSE 0 END AS days_overdue FROM invoices i, desk d WHERE i.id = ?",
+            "params": [
+              501
+            ],
+            "rows": [
+              {
+                "invoice_id": 501,
+                "vendor_id": 1,
+                "amount": 840.0,
+                "due_date": "2026-08-28",
+                "status": "open",
+                "description": "Rush reprint CC-TEE-WHITE S",
+                "date_today": "2026-08-31",
+                "is_overdue": true,
+                "days_overdue": 3,
+                "vendor": {
+                  "id": 1,
+                  "name": "Bulldog Print Co",
+                  "specialty": "apparel reprint",
+                  "lead_days": 5
+                },
+                "vendor_unpaid_invoices": [
+                  {
+                    "invoice_id": 501,
+                    "amount": 840.0,
+                    "due_date": "2026-08-28",
+                    "status": "open"
+                  }
+                ],
+                "vendor_unpaid_total": 840.0,
+                "vendor_blocked": true
+              }
+            ]
+          },
+          {
+            "name": "vendor",
+            "query": "SELECT id, name, specialty, lead_days FROM vendors WHERE id = ?",
+            "params": [
+              1
+            ],
+            "rows": [
+              {
+                "id": 1,
+                "name": "Bulldog Print Co",
+                "specialty": "apparel reprint",
+                "lead_days": 5
+              }
+            ]
+          },
+          {
+            "name": "vendor_unpaid_invoices",
+            "query": "SELECT id AS invoice_id, amount, due_date, status FROM invoices WHERE vendor_id = ? AND lower(trim(status)) <> 'paid' ORDER BY due_date, id",
+            "params": [
+              1
+            ],
+            "rows": [
+              {
+                "invoice_id": 501,
+                "amount": 840.0,
+                "due_date": "2026-08-28",
+                "status": "open"
+              }
+            ]
+          },
+          {
+            "name": "vendor_unpaid_totals",
+            "query": "SELECT ROUND(COALESCE(SUM(amount), 0), 2) AS vendor_unpaid_total, COUNT(*) > 0 AS vendor_blocked FROM invoices WHERE vendor_id = ? AND lower(trim(status)) <> 'paid'",
+            "params": [
+              1
+            ],
+            "rows": [
+              {
+                "vendor_unpaid_total": 840.0,
+                "vendor_blocked": true
+              }
+            ]
+          },
+          {
+            "name": "ticket",
+            "query": "SELECT * FROM tickets WHERE id = ?",
+            "params": [
+              101
+            ],
+            "rows": [
+              {
+                "id": 101,
+                "type": "customer_order",
+                "requester": "Tauhid Zaman",
+                "subject": "Bulldog tee",
+                "sku": "CC-TEE-WHITE",
+                "size": "S",
+                "qty": 1,
+                "lease_id": null,
+                "invoice_id": 501,
+                "status": "open",
+                "notes": "Needs a tee in size S.",
+                "created_at": "2026-08-31T09:15:00-04:00"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "ticket": 102,
+      "prompt": "Ticket 102 from the Campus Customs board: Elm City Properties emailed that our shop rent is due in 2 days, and the ticket points to lease 1. How much do we owe, on what date, and are we late as of the shop's date? Use the shop's data, not guesses.",
+      "tool": "check_lease",
+      "mcp_tool_name": "mcp__campus-customs__check_lease",
+      "arguments": {
+        "lease_id": 1
+      },
+      "tool_output": {
+        "lease_id": 1,
+        "space_name": "Chapel Street shop",
+        "landlord": "Elm City Properties",
+        "monthly_rent": 2400,
+        "next_due": "2026-09-02",
+        "notes": null,
+        "date_today": "2026-08-31",
+        "days_until_due": 2,
+        "is_overdue": false
+      },
+      "tool_error": false,
+      "assistant_answer": "Per the shop's data (lease 1, Chapel Street shop, landlord Elm City Properties):\n\n- **Amount owed:** $2,400\n- **Due date:** 2026-09-02\n- **Shop's date_today:** 2026-08-31\n- **Days until due:** 2 (not overdue)\n\nThis matches the email \u2014 rent is due in 2 days, not yet late.",
+      "run": {
+        "session_id": "8a44695c-ed3e-4805-8007-f0f8da5f91be",
+        "model": "claude-sonnet-5",
+        "mcp_servers": [
+          {
+            "name": "campus-customs",
+            "status": "connected"
+          }
+        ],
+        "tools_available": [
+          "mcp__campus-customs__check_invoice",
+          "mcp__campus-customs__check_lease",
+          "mcp__campus-customs__check_stock_and_price"
+        ],
+        "turns": 2
+      },
+      "db_check": {
+        "fields_checked": 9,
+        "all_fields_match": true,
+        "arguments_match_ticket": true,
+        "fields": [
+          {
+            "field": "date_today",
+            "tool_value": "2026-08-31",
+            "db_value": "2026-08-31",
+            "match": true
+          },
+          {
+            "field": "days_until_due",
+            "tool_value": 2,
+            "db_value": 2,
+            "match": true
+          },
+          {
+            "field": "is_overdue",
+            "tool_value": false,
+            "db_value": false,
+            "match": true
+          },
+          {
+            "field": "landlord",
+            "tool_value": "Elm City Properties",
+            "db_value": "Elm City Properties",
+            "match": true
+          },
+          {
+            "field": "lease_id",
+            "tool_value": 1,
+            "db_value": 1,
+            "match": true
+          },
+          {
+            "field": "monthly_rent",
+            "tool_value": 2400,
+            "db_value": 2400.0,
+            "match": true
+          },
+          {
+            "field": "next_due",
+            "tool_value": "2026-09-02",
+            "db_value": "2026-09-02",
+            "match": true
+          },
+          {
+            "field": "notes",
+            "tool_value": null,
+            "db_value": null,
+            "match": true
+          },
+          {
+            "field": "space_name",
+            "tool_value": "Chapel Street shop",
+            "db_value": "Chapel Street shop",
+            "match": true
+          }
+        ],
+        "ticket_link": [
+          {
+            "argument": "lease_id",
+            "argument_value": 1,
+            "ticket_column": "lease_id",
+            "ticket_value": 1,
+            "match": true
+          }
+        ],
+        "sql": [
+          {
+            "name": "lease",
+            "query": "SELECT l.id AS lease_id, l.space_name, l.landlord, l.monthly_rent, l.next_due, l.notes, d.date_today, CAST(julianday(l.next_due) - julianday(d.date_today) AS INTEGER) AS days_until_due, (l.next_due < d.date_today) AS is_overdue FROM leases l, desk d WHERE l.id = ?",
+            "params": [
+              1
+            ],
+            "rows": [
+              {
+                "lease_id": 1,
+                "space_name": "Chapel Street shop",
+                "landlord": "Elm City Properties",
+                "monthly_rent": 2400.0,
+                "next_due": "2026-09-02",
+                "notes": null,
+                "date_today": "2026-08-31",
+                "days_until_due": 2,
+                "is_overdue": false
+              }
+            ]
+          },
+          {
+            "name": "ticket",
+            "query": "SELECT * FROM tickets WHERE id = ?",
+            "params": [
+              102
+            ],
+            "rows": [
+              {
+                "id": 102,
+                "type": "rent_notice",
+                "requester": "Elm City Properties",
+                "subject": "Rent due",
+                "sku": null,
+                "size": null,
+                "qty": null,
+                "lease_id": 1,
+                "invoice_id": null,
+                "status": "open",
+                "notes": "Email: shop rent due in 2 days.",
+                "created_at": "2026-08-31T11:05:00-04:00"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

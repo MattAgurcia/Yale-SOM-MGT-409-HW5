@@ -1,0 +1,453 @@
+{
+ "about": "The three independent cash checks for the Problem 9 run (the second full run, 2026-10-14). All amounts are compared in whole cents.",
+ "run_on": "2026-10-14",
+ "checks": [
+  {
+   "name": "1. The ledger reconciles inside the database",
+   "script": "tests/cash/ledger_check.py",
+   "command": "python3 tests/cash/ledger_check.py",
+   "passed": true,
+   "passed_count": 20,
+   "total": 20,
+   "what": "Starts from the original database's checking balance and walks the working database's payments. Every payment must match exactly one approved request (same amount, kind, reference and approver). No rejected request or price override may carry a payment, and none may still be pending. Start minus payments must equal cash_accounts, counted in whole cents. Walking the human decisions in time order, the balance may never go negative and must match each audit-trail balance. The side effects must hold too: invoice 501 paid, lease 1 moved to 2026-10-02, PO 1 ordered, PO 2 rejected, stock unchanged.",
+   "result": "$3,400.00 − $3,248.00 = $152.00 = cash_accounts checking. By ticket: #101 −$848.00, #102 −$2,400.00, #103 $0.00.",
+   "results": [
+    {
+     "name": "original: checking starts at $3,400.00",
+     "passed": true,
+     "detail": "$3,400.00"
+    },
+    {
+     "name": "original: no payments",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "payment 1 (rent 1, $2,400.00) matches exactly one approved request",
+     "passed": true,
+     "detail": "approval 3, ticket 102"
+    },
+    {
+     "name": "payment 2 (invoice 501, $840.00) matches exactly one approved request",
+     "passed": true,
+     "detail": "approval 1, ticket 101"
+    },
+    {
+     "name": "payment 3 (purchase_order 1, $8.00) matches exactly one approved request",
+     "passed": true,
+     "detail": "approval 2, ticket 101"
+    },
+    {
+     "name": "no payment points at a missing row",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "no rejected request or price override carries a payment",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "no request is still pending",
+     "passed": true,
+     "detail": "1:approved, 2:approved, 3:approved, 4:approved, 5:rejected, 6:approved"
+    },
+    {
+     "name": "start − payments = cash_accounts (to the cent)",
+     "passed": true,
+     "detail": "$3,400.00 − $3,248.00 = $152.00"
+    },
+    {
+     "name": "per ticket: #101 $848.00, #102 $2,400.00, #103 $0.00",
+     "passed": true,
+     "detail": "{101: '$848.00', 102: '$2,400.00', 103: '$0.00'}"
+    },
+    {
+     "name": "per-ticket amounts add up to the total paid out",
+     "passed": true,
+     "detail": "$3,248.00"
+    },
+    {
+     "name": "audit: the run starts from a reset with the original's hash",
+     "passed": true,
+     "detail": "seq 323"
+    },
+    {
+     "name": "decisions in order: balance never negative and matches each audit balance",
+     "passed": true,
+     "detail": "$3,400.00 → $1,000.00 → $160.00 → $152.00"
+    },
+    {
+     "name": "every payment row has its decision in the audit trail",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "no agent approved or rejected anything",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "every agent cash read before the decisions saw the starting balance",
+     "passed": true,
+     "detail": "4 reads"
+    },
+    {
+     "name": "invoice 501 is paid",
+     "passed": true,
+     "detail": "paid"
+    },
+    {
+     "name": "lease 1 moved one month on (2026-09-02 → 2026-10-02)",
+     "passed": true,
+     "detail": "2026-10-02"
+    },
+    {
+     "name": "PO 1 ordered ($8.00, arriving 2026-09-05); PO 2 rejected ($264.00, nothing paid)",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "stock is unchanged (no delivery is recorded)",
+     "passed": true,
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "2. Every place that states the cash agrees",
+   "script": "tests/cash/sources_check.py",
+   "command": "python3 tests/cash/sources_check.py (backend on port 8000)",
+   "passed": true,
+   "passed_count": 32,
+   "total": 32,
+   "what": "A separate script, sharing no code with the page generators, compares the working database with the live API (/api/cash and /api/approvals on port 8000) and the audit trail (the reset, each human decision's balance, every agent's check_cash read). It then checks every cash figure in desk_tickets.html, resolved_tickets.json and resolved_board.html.",
+   "result": "The database, the API, the audit trail and all three deliverables agree to the cent.",
+   "results": [
+    {
+     "name": "DB: start - sum(payments) = cash_accounts",
+     "passed": true,
+     "detail": "340000 - 324800 = 15200"
+    },
+    {
+     "name": "DB: values are $3,400.00 / $3,248.00 / $152.00",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "DB: per ticket 101 $848, 102 $2,400, 103 $0",
+     "passed": true,
+     "detail": "{101: 84800, 102: 240000, 103: 0}"
+    },
+    {
+     "name": "API /api/cash balance = DB",
+     "passed": true,
+     "detail": "$152.00"
+    },
+    {
+     "name": "API /api/cash payments = DB rows",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "API /api/cash nothing pending",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "API /api/approvals = DB (status, amount, payment)",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "audit: seq continuous",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "audit: last reset is seq 323 (the second full run), from the original's hash",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "audit: every human_decision balance = running balance",
+     "passed": true,
+     "detail": "[(3, 100000, 100000), (1, 16000, 16000), (2, 15200, 15200)]"
+    },
+    {
+     "name": "audit: balances go 1,000 -> 160 -> 152",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "audit: final running balance = DB",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "audit: every agent cash read saw the balance of that moment ($3,400.00 before the decisions, $152.00 after)",
+     "passed": true,
+     "detail": "seq 345: $3,400.00, seq 395: $3,400.00, seq 433: $3,400.00, seq 508: $152.00"
+    },
+    {
+     "name": "audit: no agent called approve/reject after the reset",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "desk Cash tiles: start / paid / end",
+     "passed": true,
+     "detail": "['$3,400.00', '−$3,248.00', '$152.00']"
+    },
+    {
+     "name": "desk Cash per-ticket changes = DB",
+     "passed": true,
+     "detail": "[('101', '−$848.00'), ('102', '−$2,400.00'), ('103', '$0.00')]"
+    },
+    {
+     "name": "desk Cash itemized payments = DB amounts",
+     "passed": true,
+     "detail": "['−$840.00', '−$8.00', '−$2,400.00']"
+    },
+    {
+     "name": "desk Cash total row = paid out",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "desk ledger running balance 3,400 -> 1,000 -> 160 -> 152 -> 152 -> 152 -> 152",
+     "passed": true,
+     "detail": "[340000, 100000, 16000, 15200, 15200, 15200, 15200]"
+    },
+    {
+     "name": "desk equation adds up",
+     "passed": true,
+     "detail": "$3,400.00 − $2,400.00 − $840.00 − $8.00 = $152.00"
+    },
+    {
+     "name": "desk names the cash_accounts row",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "desk #101 Actual cash line = DB",
+     "passed": true,
+     "detail": "−$848.00"
+    },
+    {
+     "name": "desk #102 Actual cash line = DB",
+     "passed": true,
+     "detail": "−$2,400.00"
+    },
+    {
+     "name": "desk #103 Actual cash line = DB",
+     "passed": true,
+     "detail": "$0.00"
+    },
+    {
+     "name": "json cash start/paid/end = DB",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "json cash_accounts_checking = DB",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "json per-ticket cash_change = DB",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "json payments = DB rows",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "json approvals = DB (status, amount, payment)",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "json checking_after per approval follows the decision order",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "board cards cash = DB",
+     "passed": true,
+     "detail": "[('101', '−$848.00'), ('102', '−$2,400.00'), ('103', '$0.00')]"
+    },
+    {
+     "name": "board cash line start/end/paid = DB",
+     "passed": true,
+     "detail": "Checking: $3,400.00 after the reset → $152.00 at the end (paid out $3,248.00 in 3 payments). The ending balance matches "
+    }
+   ]
+  },
+  {
+   "name": "3. Replaying the decisions through the real MCP server lands on the same balance",
+   "script": "tests/cash/replay_check.py",
+   "command": ".venv/bin/python tests/cash/replay_check.py",
+   "passed": true,
+   "passed_count": 30,
+   "total": 30,
+   "what": "On a fresh temporary copy of the original database, the same six requests are filed and decided in the same order through the MCP server's own tools, with request 6 (the $49 price for the 8 hoodies in stock) filed after the first five decisions, as in the run. The replay must end on exactly the working database's cash, payments, approvals, invoices, leases, purchase orders and stock. The safety refusals must also hold: the $264.00 order is refused with $152.00 left (no negative balance), the tee order is refused while invoice 501 is unpaid, approving rent twice is refused, an agent's name cannot approve, and a duplicate invoice request is refused.",
+   "result": "Same end state as the working database, and every refusal held. Neither real database file changed.",
+   "results": [
+    {
+     "name": "replay starts from the original's checking balance",
+     "passed": true,
+     "detail": "$3,400.00"
+    },
+    {
+     "name": "human tools are present only because CAMPUS_HUMAN_TOOLS=1",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "request 1: invoice 501 for $840.00",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "request 2: PO 1, 1 tee at $8.00",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "request 3: rent for lease 1, $2,400.00",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "request 4: price override $49 x 20, $0.00 cash",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "request 5: PO 2, 12 hoodies at $264.00",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "filing requests moved no cash",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "check_cash before decisions: pending $3,512.00, short $112.00",
+     "passed": true,
+     "detail": "pending $3,512.00, if all paid $-112.00"
+    },
+    {
+     "name": "duplicate invoice request refused (as in the run)",
+     "passed": true,
+     "detail": "Approval request 1 for this invoice is already pending; do not request it twice."
+    },
+    {
+     "name": "tee PO refused while invoice 501 is unpaid",
+     "passed": true,
+     "detail": "Vendor 1 still has unpaid invoice(s) 501 and will not ship; approve those payments first. "
+    },
+    {
+     "name": "an agent name cannot approve",
+     "passed": true,
+     "detail": "approved_by must be a human; agents cannot approve or reject requests."
+    },
+    {
+     "name": "approve request 3: checking $1,000.00",
+     "passed": true,
+     "detail": "$1,000.00"
+    },
+    {
+     "name": "approve request 1: checking $160.00",
+     "passed": true,
+     "detail": "$160.00"
+    },
+    {
+     "name": "approve request 2: checking $152.00",
+     "passed": true,
+     "detail": "$152.00"
+    },
+    {
+     "name": "approve request 4: checking $152.00",
+     "passed": true,
+     "detail": "$152.00"
+    },
+    {
+     "name": "$264.00 hoodie PO refused with $152.00 left (no negative balance)",
+     "passed": true,
+     "detail": "Not enough cash: checking has $152.00 and this payment is $264.00. Nothing was paid."
+    },
+    {
+     "name": "approving rent a second time is refused (no double pay)",
+     "passed": true,
+     "detail": "Approval request 3 is already approved."
+    },
+    {
+     "name": "reject request 5: nothing paid",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "request 6: price override $49 x 8 (the hoodies in stock), $0.00 cash",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "approve request 6: no cash moves, checking stays $152.00",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "final check_cash reads $152.00 with 3 payments",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "replayed cash equal the working database's",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "replayed payments equal the working database's",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "replayed approvals equal the working database's",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "replayed invoices equal the working database's",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "replayed leases equal the working database's",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "replayed purchase_orders equal the working database's",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "replayed inventory equal the working database's",
+     "passed": true,
+     "detail": ""
+    },
+    {
+     "name": "start - payments = end, in cents",
+     "passed": true,
+     "detail": "340000 - 324800 = 15200"
+    }
+   ]
+  }
+ ],
+ "note": "Run 2026-10-14 after the full run. Amounts are compared in whole cents, so floating-point rounding cannot hide a difference."
+}

@@ -1,0 +1,10 @@
+# Campus Customs — HW 5
+# Python 3.11+ (developed on 3.14; pydantic-ai needs 3.11+). The audit trail's
+# cross-process lock needs macOS or Linux. Install into a virtual environment:
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+fastmcp>=4.1  # the MCP server (mcp_server/server.py) and the backend's MCP client
+pydantic-ai-slim[openai,mcp]>=2.55  # the agent team (backend/agents.py)
+python-dotenv>=1.0  # reads PORTKEY_API_KEY from .env
+fastapi>=0.115  # the dashboard API (backend/main.py)
+uvicorn[standard]>=0.30  # runs it: cd backend && uvicorn main:app --reload --port 8000
